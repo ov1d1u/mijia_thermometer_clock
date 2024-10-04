@@ -43,7 +43,6 @@ class Mijia:
 
     use_fahrenheit = None
     _connect_lock = asyncio.Lock()
-    _disconnect_task = None
 
     def __init__(
         self,
@@ -99,15 +98,13 @@ class Mijia:
 
         return False
 
+    @ensure_connected
     async def set_time(
         self,
         timestamp: int,
         timezone: str
     ) -> bool:
         start_time = time.time()
-
-        if not self.client or not self.client.is_connected:
-            await self.connect()
 
         # Account for time passed while connecting
         timestamp = int(timestamp + (time.time() - start_time))
