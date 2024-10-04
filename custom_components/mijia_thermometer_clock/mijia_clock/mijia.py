@@ -16,25 +16,14 @@ from .eventbus import EventBus
 from ..const import (
     CONFIG_UPDATED,
     DEVICE_CONENCTED,
-    DEVICE_DISCONNECTED
+    DEVICE_DISCONNECTED,
+    CONNECTION_TIMEOUT
 )
 from ..exceptions import NotConnectedError
 
 _LOGGER = logging.getLogger(__name__)
 TIME_CHAR = "EBE0CCB7-7A0A-4B0C-8A1A-6FF2997DA3A6"
 SETTINGS_CHAR = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"
-
-def ensure_connected(func):
-    @wraps(func)
-    async def wrapper(self, *args, **kwargs):
-        if not self.client or not self.client.is_connected:
-            await self.connect()
-        try:
-            result = await func(self, *args, **kwargs)
-        finally:
-            await self.disconnect()
-        return result
-    return wrapper
 
 
 class Mijia:
@@ -98,13 +87,14 @@ class Mijia:
 
         return False
 
-    @ensure_connected
     async def set_time(
         self,
         timestamp: int,
         timezone: str
     ) -> bool:
         start_time = time.time()
+
+        await self._ensure_connected()
 
         # Account for time passed while connecting
         timestamp = int(timestamp + (time.time() - start_time))
@@ -117,8 +107,9 @@ class Mijia:
         await self._write_gatt_char(TIME_CHAR, data)
         return True
 
-    @ensure_connected
     async def set_use_fahrenheit(self, use_fahrenheit: bool) -> bool:
+        await self._ensure_connected()
+
         if use_fahrenheit:
             await self._write_gatt_char(SETTINGS_CHAR, b"\x01")
         else:
@@ -126,6 +117,16 @@ class Mijia:
         await self._read_config()
 
         return True
+
+    async def _ensure_connected(self):
+        async def wait_for_connected():
+            while not self.client or not self.client.is_connected:
+                await self.connect()
+
+        try:
+            await asyncio.wait_for(wait_for_connected(), CONNECTION_TIMEOUT)
+        except asyncio.TimeoutError:
+            raise NotConnectedError("Connection timeout")
 
     async def _read_gatt_char(self, uuid: str) -> bytes:
         if self.client and self.client.is_connected:

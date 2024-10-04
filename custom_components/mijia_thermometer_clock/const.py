@@ -9,3 +9,5 @@ SERVICE_SET_TIME = "set_time"
 DEVICE_CONENCTED = "event.connected"
 DEVICE_DISCONNECTED = "event.disconnected"
 CONFIG_UPDATED = "event.config_updated"
+
+CONNECTION_TIMEOUT = 120
