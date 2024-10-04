@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowResul
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import CONF_MAC, CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.components.bluetooth import (
     async_discovered_service_info
 )
@@ -46,10 +45,13 @@ class MijiaTemperatureClockConfigFlow(ConfigFlow, domain=DOMAIN):
         return False
 
     async def _validate_device(self, mijia):
-        assert await mijia.connect()
-        await mijia.disconnect()
+        try:
+            await mijia.connect()
+            await mijia.disconnect()
+        except:
+            raise DeviceValidationError("Failed to validate device.")
 
-        return None
+        return True
 
     async def async_step_user(
         self,
@@ -150,6 +152,5 @@ class MijiaTemperatureClockConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
+class DeviceValidationError(HomeAssistantError):
+    """Error to indicate there was a problem with the device."""
