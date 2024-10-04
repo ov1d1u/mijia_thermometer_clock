@@ -1,0 +1,19 @@
+{
+  "domain": "mijia_thermometer_clock",
+  "name": "Mijia Temperature and Humidity Monitor Clock",
+  "codeowners": [
+    "@ov1d1u"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/ov1d1u/mijia_thermometer_clock",
+  "issue_tracker": "https://github.com/ov1d1u/mijia_thermometer_clock/issues",
+  "iot_class": "local_polling",
+  "requirements": [
+    "bleak>=0.17.0",
+    "pytz>=2022.6"
+  ],
+  "version": "0.0.1"
+}

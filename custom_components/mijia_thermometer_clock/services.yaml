@@ -1,0 +1,20 @@
+set_time:
+  description: "Set the time on the clock."
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: mijia_thermometer_clock
+    time:
+      description: "The time in YYYY-MM-DD HH:MM:SS format."
+      example: "2022-02-22 13:30:00"
+      required: true
+      selector:
+        datetime:
+    timezone:
+      description: "Timezone in IANA format."
+      example: "Europe/Bucharest"
+      required: true
+      selector:
+        text:
