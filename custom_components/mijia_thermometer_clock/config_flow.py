@@ -48,10 +48,9 @@ class MijiaTemperatureClockConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await mijia.connect()
             await mijia.disconnect()
-        except:
-            raise DeviceValidationError("Failed to validate device.")
-
-        return True
+        except Exception as e:
+            _LOGGER.error(e)
+            return "device_validation_error"
 
     async def async_step_user(
         self,
@@ -59,7 +58,6 @@ class MijiaTemperatureClockConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[CONF_MAC] == MANUAL_MAC:
                 return await self.async_step_manual_mac()
@@ -113,7 +111,6 @@ class MijiaTemperatureClockConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle validate step."""
         error = None
         mijia = Mijia(self.hass, self.mac, self.name)
-        await self._validate_device(mijia)
         try:
             error = await self._validate_device(mijia)
         except Exception as e:

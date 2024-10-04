@@ -1,20 +1,22 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "device_validation_error": "Failed to validate device."
         },
         "step": {
+            "manual_mac": {
+                "data": {
+                    "mac": "MAC address"
+                },
+                "description": "Enter the MAC address of your LYWSD02MMC clock",
+                "title": "Enter MAC address"
+            },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
-                }
+                    "mac": "Please select a device to configure"
+                },
+                "description": "This integration only supports LYWSD02MMC clocks. Make sure the device is in close range.",
+                "title": "Mijia Clock Setup"
             }
         }
     }
