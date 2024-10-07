@@ -15,9 +15,10 @@ from homeassistant.components.bluetooth import (
 from .eventbus import EventBus
 from ..const import (
     CONFIG_UPDATED,
-    DEVICE_CONENCTED,
+    DEVICE_CONNECTED,
     DEVICE_DISCONNECTED,
-    CONNECTION_TIMEOUT
+    CONNECTION_TIMEOUT,
+    DISCONNECT_DELAY
 )
 from ..exceptions import NotConnectedError
 
@@ -32,6 +33,7 @@ class Mijia:
 
     use_fahrenheit = None
     _connect_lock = asyncio.Lock()
+    _disconnect_task = None
 
     def __init__(
         self,
@@ -54,7 +56,7 @@ class Mijia:
                 return True
 
             device = async_ble_device_from_address(self.hass, self.mac, connectable=True)
-            self.client = BleakClient(device)
+            self.client = BleakClient(device, disconnected_callback=self._on_disconnect)
 
             _LOGGER.debug(f"Connecting to {self.mac}...")
             try:
@@ -66,7 +68,7 @@ class Mijia:
             await asyncio.sleep(2.0)  # give some time for service discovery
 
             _LOGGER.debug(f"Connected to {self.mac}")
-            self.eventbus.send(DEVICE_CONENCTED, self)
+            self.eventbus.send(DEVICE_CONNECTED, self)
 
             if self.use_fahrenheit is None:
                 await self._read_config()
@@ -76,13 +78,12 @@ class Mijia:
     async def connect_if_needed(self):
         if self.use_fahrenheit is None:
             await self.connect()
+            await self.delayed_disconnect()
 
     async def disconnect(self) -> bool:
         if self.client and self.client.is_connected:
             _LOGGER.debug(f"Disconnecting from {self.mac}...")
             await self.client.disconnect()
-            self.eventbus.send(DEVICE_DISCONNECTED, self)
-            self.client = None
             return True
 
         return False
@@ -105,6 +106,7 @@ class Mijia:
         )
 
         await self._write_gatt_char(TIME_CHAR, data)
+
         return True
 
     async def set_use_fahrenheit(self, use_fahrenheit: bool) -> bool:
@@ -117,6 +119,22 @@ class Mijia:
         await self._read_config()
 
         return True
+
+    async def delayed_disconnect(self):
+        async def _delayed_disconnect():
+            if not self.client.is_connected:
+                return
+
+            try:
+                await asyncio.sleep(DISCONNECT_DELAY)
+                await self.disconnect()
+            except Exception as e:
+                _LOGGER.debug(f"Failed to disconnect. Error: {e}")
+
+        loop = asyncio.get_running_loop()
+        if self._disconnect_task is not None:
+            self._disconnect_task.cancel()
+        self._disconnect_task = loop.create_task(_delayed_disconnect())
 
     async def _ensure_connected(self):
         async def wait_for_connected():
@@ -137,6 +155,7 @@ class Mijia:
     async def _write_gatt_char(self, uuid: str, data: bytes) -> bool:
         _LOGGER.debug(f">> {uuid}: {data.hex()}")
         await self.client.write_gatt_char(uuid, data)
+        self.delayed_disconnect()
 
     async def _read_config(self):
         use_fahrenheit = await self._read_gatt_char(SETTINGS_CHAR)
@@ -163,3 +182,12 @@ class Mijia:
         tz_offset = int(current_time.utcoffset().total_seconds()/3600)
 
         return pack('<IB', timestamp, tz_offset)
+
+    def _on_disconnect(self, client: BleakClient):
+        if self._disconnect_task is not None:
+            self._disconnect_task.cancel()
+            self._disconnect_task = None
+
+        _LOGGER.debug(f"Disconnected from {self.mac}")
+        self.eventbus.send(DEVICE_DISCONNECTED, self)
+        self.client = None

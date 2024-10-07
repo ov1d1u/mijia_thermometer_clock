@@ -14,7 +14,8 @@ from .services import async_register_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
-    Platform.SWITCH
+    Platform.SWITCH,
+    Platform.BINARY_SENSOR
 ]
 
 
@@ -34,8 +35,6 @@ async def async_setup_entry(
 
     async def _connect_if_needed():
         await instance.connect_if_needed()
-        if instance.is_connected:
-            await instance.disconnect()
 
     @callback
     def _async_discovered_device(
