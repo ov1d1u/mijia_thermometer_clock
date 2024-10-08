@@ -2,7 +2,6 @@
 
 DOMAIN = "mijia_thermometer_clock"
 CONF_TIME = "time"
-CONF_TIMEZONE = "timezone"
 
 SERVICE_SET_TIME = "set_time"
 

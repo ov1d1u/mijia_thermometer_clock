@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import time
-import pytz
 from struct import pack
 from functools import wraps
 from bleak import BleakClient
@@ -91,7 +90,7 @@ class Mijia:
     async def set_time(
         self,
         timestamp: int,
-        timezone: str
+        timezone_offset: int | None = None
     ) -> bool:
         start_time = time.time()
 
@@ -100,12 +99,12 @@ class Mijia:
         # Account for time passed while connecting
         timestamp = int(timestamp + (time.time() - start_time))
 
-        data = self._get_bytes_from_time(
+        timestamp_bytes = self._get_bytes_from_time(
             timestamp,
-            timezone
+            timezone_offset or 0
         )
 
-        await self._write_gatt_char(TIME_CHAR, data)
+        await self._write_gatt_char(TIME_CHAR, timestamp_bytes)
 
         return True
 
@@ -165,7 +164,7 @@ class Mijia:
     def _get_bytes_from_time(
         self,
         timestamp: int,
-        timezone: pytz.BaseTzInfo
+        timezone_offset: int
     ) -> bytes:
         """Generate the bytes to set the time on the LYWSD02MMC clock with Daylight Saving Time adjustment.
         Args:
@@ -176,12 +175,7 @@ class Mijia:
         Returns:
             bytes: The bytes needed to set the time of the device to `timestamp` considering the timezone and DST.
         """
-        # Adjust timezone for DST if necessary
-
-        current_time = datetime.now(timezone)
-        tz_offset = int(current_time.utcoffset().total_seconds()/3600)
-
-        return pack('<IB', timestamp, tz_offset)
+        return pack('<IB', timestamp, timezone_offset)
 
     def _on_disconnect(self, client: BleakClient):
         if self._disconnect_task is not None:
