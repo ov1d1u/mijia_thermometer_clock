@@ -58,7 +58,6 @@ The integration supports the following service call:
 |------------|----------|-----------------------------------|---------------------------|
 | `device_id`| Yes      | The device ID of the clock.       |                           |
 | `time`     | Yes      | The time in YYYY-MM-DD HH:MM:SS format. | 2022-02-22 13:30:00       |
-| `timezone` | Yes      | Timezone in IANA format.          | Europe/Bucharest          |
 
 To use this service, call it from your Home Assistant with the necessary parameters.
 
