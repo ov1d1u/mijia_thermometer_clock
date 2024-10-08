@@ -155,7 +155,7 @@ class Mijia:
     async def _write_gatt_char(self, uuid: str, data: bytes) -> bool:
         _LOGGER.debug(f">> {uuid}: {data.hex()}")
         await self.client.write_gatt_char(uuid, data)
-        self.delayed_disconnect()
+        await self.delayed_disconnect()
 
     async def _read_config(self):
         use_fahrenheit = await self._read_gatt_char(SETTINGS_CHAR)
