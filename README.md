@@ -1,5 +1,7 @@
 # Mijia Temperature and Humidity Monitor Clock Integration for Home Assistant
 
+![mi-temperature-and-humidity-monitor-pro-lywsd02mmc-1](https://github.com/user-attachments/assets/15d6fccc-e40a-4344-8360-9a40797efc55) 
+
 This Home Assistant integration allows you to control Mijia Temperature and Humidity Monitor (LYWSD02MMC) clocks. You can set the time and configure the devices seamlessly using the Home Assistant interface.
 
 ## Features
