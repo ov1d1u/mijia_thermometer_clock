@@ -33,7 +33,7 @@ def async_register_services(hass: HomeAssistant) -> None:
 
             timezone_offset = None
             if time.tzinfo is not None:
-                timezone_offset = int(time.utcoffset().total_seconds() / 60)
+                timezone_offset = int(time.utcoffset().total_seconds() / 3600)
             timestamp = int(time.timestamp())
 
             await instance.set_time(timestamp, timezone_offset)
