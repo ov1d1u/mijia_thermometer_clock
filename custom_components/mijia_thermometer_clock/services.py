@@ -31,7 +31,7 @@ def async_register_services(hass: HomeAssistant) -> None:
             if instance.mac != mac:
                 continue
 
-            timezone_offset = 0
+            timezone_offset = None
             if time.tzinfo is not None:
                 timezone_offset = int(time.utcoffset().total_seconds() / 60)
             timestamp = int(time.timestamp())

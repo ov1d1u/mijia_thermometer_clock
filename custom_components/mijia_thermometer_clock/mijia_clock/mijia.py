@@ -2,9 +2,7 @@ import asyncio
 import logging
 import time
 from struct import pack
-from functools import wraps
 from bleak import BleakClient
-from datetime import datetime
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.bluetooth import (
@@ -94,6 +92,13 @@ class Mijia:
     ) -> bool:
         start_time = time.time()
 
+        if timezone_offset is None:
+            is_dst = time.daylight and time.localtime().tm_isdst > 0
+            utc_offset = - (time.altzone if is_dst else time.timezone)
+            timezone_offset = int(utc_offset / 3600)
+
+        _LOGGER.debug(f"Set time to {timestamp}, tz offset: {timezone_offset}")
+
         await self._ensure_connected()
 
         # Account for time passed while connecting
@@ -101,7 +106,7 @@ class Mijia:
 
         timestamp_bytes = self._get_bytes_from_time(
             timestamp,
-            timezone_offset or 0
+            timezone_offset
         )
 
         await self._write_gatt_char(TIME_CHAR, timestamp_bytes)
@@ -168,12 +173,11 @@ class Mijia:
     ) -> bytes:
         """Generate the bytes to set the time on the LYWSD02MMC clock with Daylight Saving Time adjustment.
         Args:
-            timestamp (int): The time encoded as a Unix timestamp.
-            timezone (str, optional): The timezone identifier
-            dst (bool, optional): Whether Daylight Saving Time should be applied. Defaults to False.
+            timestamp (int): The timestamp to set
+            timezone_offset (int): The timezone offset in minutes
 
         Returns:
-            bytes: The bytes needed to set the time of the device to `timestamp` considering the timezone and DST.
+            bytes: The bytes needed to set the time of the device to `timestamp` considering the timezone offset.
         """
         return pack('<IB', timestamp, timezone_offset)
 
